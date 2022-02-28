@@ -1,16 +1,13 @@
 package com.example.keycloakuserstore.dao;
 
-import com.example.keycloakuserstore.models.User;
-import org.hibernate.Transaction;
+import com.example.keycloakuserstore.models.CfmastEntity;
+import com.example.keycloakuserstore.models.UserloginEntity;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import javax.persistence.FlushModeType;
 import javax.persistence.TypedQuery;
-import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 public class UserDAO {
@@ -22,55 +19,70 @@ public class UserDAO {
         this.entityManager = entityManager;
     }
 
-    public List<User> findAll() {
+    public List<CfmastEntity> findAll() {
         return findAll(null, null);
     }
 
-    public List<User> findAll(int start, int max) {
+    public List<CfmastEntity> findAll(int start, int max) {
         return findAll((Integer)start, (Integer)max);
     }
 
-    private List<User> findAll(Integer start, Integer max) {
-        TypedQuery<User> query = entityManager.createNamedQuery("searchForUser", User.class);
+    private List<CfmastEntity> findAll(Integer start, Integer max) {
+        TypedQuery<CfmastEntity> query = entityManager.createQuery("SELECT U FROM CfmastEntity U  ", CfmastEntity.class);
         if(start != null) {
             query.setFirstResult(start);
         }
         if(max != null) {
             query.setMaxResults(max);
         }
-        query.setParameter("search", "%");
-        List<User> users =  query.getResultList();
+//        query.setParameter("search", "%");
+        List<CfmastEntity> users =  query.getResultList();
         return users;
     }
 
-    public Optional<User> getUserByUsername(String username) {
+    public Optional<CfmastEntity> validateCredentials(String username, String password) {
+        logger.info("validateCredentials(username: " + username + ")" + " password: " + password);
+        String queryDB = "SELECT u from UserloginEntity u where u.username=(SELECT cf.cusToCD from CfmastEntity  cf WHERE cf.cusToCD = :username or cf.email = :email or cf.mobile = :mobile) and u.loginpwd = :password and u.status='A'";
+        TypedQuery<CfmastEntity> query = entityManager.createQuery(queryDB, CfmastEntity.class);
+        query.setParameter("username", username);
+        query.setParameter("email", username);
+        query.setParameter("mobile", username);
+        query.setParameter("password", password);
+        return query.getResultList().stream().findFirst();
+    }
+
+    public Optional<CfmastEntity> getUserByUsername(String username) {
         logger.info("getUserByUsername(username: " + username + ")");
-        TypedQuery<User> query = entityManager.createNamedQuery("getUserByUsername", User.class);
+        String queryDB = "SELECT u from CfmastEntity u where u.cusToCD = :username ";
+        TypedQuery<CfmastEntity> query = entityManager.createQuery(queryDB, CfmastEntity.class);
         query.setParameter("username", username);
         return query.getResultList().stream().findFirst();
     }
 
-    public Optional<User> getUserByEmail(String email) {
+    public Optional<CfmastEntity> getUserByEmail(String email) {
         logger.info("getUserByEmail(email: " + email + ")");
-        TypedQuery<User> query = entityManager.createNamedQuery("getUserByEmail", User.class);
+        String queryDB = "SELECT u from CfmastEntity u where u.email = :email ";
+        TypedQuery<CfmastEntity> query = entityManager.createQuery(queryDB, CfmastEntity.class);
         query.setParameter("email", email);
         return query.getResultList().stream().findFirst();
     }
 
-    public List<User> searchForUserByUsernameOrEmail(String searchString) {
+    public List<CfmastEntity> searchForUserByUsernameOrEmail(String searchString) {
         logger.info("searchForUserByUsernameOrEmail(searchString: " + searchString + ")");
         return searchForUserByUsernameOrEmail(searchString, null, null);
     }
 
-    public List<User> searchForUserByUsernameOrEmail(String searchString, int start, int max) {
+    public List<CfmastEntity> searchForUserByUsernameOrEmail(String searchString, int start, int max) {
         logger.info("searchForUserByUsernameOrEmail(searchString: " + searchString + ", start: "+start+", max: "+max+")");
         return searchForUserByUsernameOrEmail(searchString, (Integer)start, (Integer)max);
     }
 
-    private List<User> searchForUserByUsernameOrEmail(String searchString, Integer start, Integer max) {
+    private List<CfmastEntity> searchForUserByUsernameOrEmail(String searchString, Integer start, Integer max) {
         logger.info("searchForUserByUsernameOrEmail(searchString: " + searchString + ", start: "+start+", max: "+max+")");
-        TypedQuery<User> query = entityManager.createNamedQuery("searchForUser", User.class);
-        query.setParameter("search", "%" + searchString + "%");
+        String queryDB = "SELECT u from CfmastEntity u where u.email like :email or u.cusToCD like :username ";
+        TypedQuery<CfmastEntity> query = entityManager.createQuery(queryDB, CfmastEntity.class);
+        query.setParameter("email", "%" + searchString + "%");
+        query.setParameter("username", "%" + searchString + "%");
         if(start != null) {
             query.setFirstResult(start);
         }
@@ -80,12 +92,12 @@ public class UserDAO {
         return query.getResultList();
     }
 
-    public User getUserById(String id) {
-        logger.info("getUserById(id: " + id + ")");
-        return entityManager.find(User.class, UUID.fromString(id));
+    public CfmastEntity getUserById(String id) {
+//        logger.info("getUserById(id: " + UUID.fromString(id) + ")");
+        return entityManager.find(CfmastEntity.class, id);
     }
 
-    public User createUser(User user) {
+    public CfmastEntity createUser(CfmastEntity user) {
         EntityTransaction transaction = entityManager.getTransaction();
         transaction.begin();
         entityManager.persist(user);
@@ -93,26 +105,41 @@ public class UserDAO {
         return user;
     }
 
-    public void deleteUser(User user) {
-        EntityTransaction transaction = entityManager.getTransaction();
-        transaction.begin();
-        entityManager.remove(user);
-        transaction.commit();
+    public void deleteUser(CfmastEntity user) {
+
     }
 
     public void close() {
         this.entityManager.close();
     }
 
-    public User updateUser(User userEntity) {
+    public UserloginEntity updatePassword(UserloginEntity userloginEntity) {
+        String queryupdate = "UPDATE UserloginEntity u SET u.loginpwd = :password where u.username = : username ";
+
         EntityTransaction transaction = entityManager.getTransaction();
         transaction.begin();
-        entityManager.merge(userEntity);
+        entityManager.createQuery(queryupdate)
+                .setParameter("password",userloginEntity.getLoginpwd())
+                        .setParameter("username",userloginEntity.getUsername());
         transaction.commit();
-        return userEntity;
+        return userloginEntity;
+    }
+
+    public CfmastEntity updateUser(CfmastEntity cfmastEntity) {
+        String queryupdate = "UPDATE CfmastEntity u SET u.cusToCD = :username , u.email = :email , u.mobile = :mobile , u.fullName = :fullName  where u.cusId = :id ";
+
+        EntityTransaction transaction = entityManager.getTransaction();
+        transaction.begin();
+        entityManager.createQuery(queryupdate)
+                .setParameter("username",cfmastEntity.getCusToCD())
+                .setParameter("mobile",cfmastEntity.getMobile())
+                .setParameter("fullName",cfmastEntity.getFullName())
+                .setParameter("email",cfmastEntity.getEmail());
+        transaction.commit();
+        return cfmastEntity;
     }
 
     public int size() {
-        return entityManager.createNamedQuery("getUserCount", Integer.class).getSingleResult();
+        return entityManager.createQuery("SELECT COUNT(U) FROM CfmastEntity U", Integer.class).getSingleResult();
     }
 }

@@ -1,16 +1,13 @@
 package com.example.keycloakuserstore;
 
 import com.example.keycloakuserstore.dao.UserDAO;
-import com.example.keycloakuserstore.models.User;
 import lombok.extern.jbosslog.JBossLog;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.keycloak.Config;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.component.ComponentValidationException;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.RealmModel;
 import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.provider.ProviderConfigurationBuilder;
@@ -106,17 +103,16 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
         EntityManagerFactory entityManagerFactory = entityManagerFactories.get(dbConnectionName);
         if(entityManagerFactory == null) {
             MultivaluedHashMap<String, String> config = model.getConfig();
-            properties.put("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver");
-            properties.put("hibernate.connection.url",
-                    String.format("jdbc:mysql://%s:%s/%s",
+            properties.put("javax.persistence.jdbc.driver", "oracle.jdbc.OracleDriver");
+            properties.put("javax.persistence.jdbc.url",
+                    String.format("jdbc:oracle:thin:@//%s:%s/%s",
                             config.getFirst(DB_HOST_KEY),
                             config.getFirst(DB_PORT_KEY),
                             config.getFirst(DB_DATABASE_KEY)));
-            properties.put("hibernate.connection.username", config.getFirst(DB_USERNAME_KEY));
-            properties.put("hibernate.connection.password", config.getFirst(DB_PASSWORD_KEY));
+            properties.put("javax.persistence.jdbc.user", config.getFirst(DB_USERNAME_KEY));
+            properties.put("javax.persistence.jdbc.password", config.getFirst(DB_PASSWORD_KEY));
             properties.put("hibernate.show-sql", "true");
-            properties.put("hibernate.archive.autodetection", "class, hbm");
-            properties.put("hibernate.hbm2ddl.auto", "update");
+//            properties.put("hibernate.hbm2ddl.auto", "update");
             properties.put("hibernate.connection.autocommit", "true");
 
             entityManagerFactory = new HibernatePersistenceProvider().createContainerEntityManagerFactory(getPersistenceUnitInfo("h2userstorage"), properties);
@@ -207,7 +203,6 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
             @Override
             public List<String> getManagedClassNames() {
                 List<String> managedClasses = new LinkedList<>();
-                managedClasses.add(User.class.getName());
                 return managedClasses;
             }
 
@@ -255,6 +250,6 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
 
     @Override
     public String getId() {
-        return "demo-mysql-user-provider";
+        return "demo3-mysql-user-provider";
     }
 }
