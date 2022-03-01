@@ -1,7 +1,7 @@
 package com.example.keycloakuserstore.representations;
 
 import com.example.keycloakuserstore.dao.UserDAO;
-import com.example.keycloakuserstore.models.User;
+import com.example.keycloakuserstore.model.UserDto;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
@@ -14,45 +14,45 @@ import java.util.List;
 import java.util.Map;
 
 public class UserRepresentation extends AbstractUserAdapterFederatedStorage {
-    private User userEntity;
+    private UserDto userDto;
     private UserDAO userDAO;
 
     public UserRepresentation(KeycloakSession session,
                               RealmModel realm,
                               ComponentModel storageProviderModel,
-                              User userEntity,
+                              UserDto userDto,
                               UserDAO userDAO) {
         super(session, realm, storageProviderModel);
-        this.userEntity = userEntity;
+        this.userDto = userDto;
         this.userDAO = userDAO;
     }
 
     @Override
     public String getUsername() {
-        return userEntity.getUsername();
+        return userDto.getUserName();
     }
 
     @Override
     public void setUsername(String username) {
-        userEntity.setUsername(username);
-        userEntity = userDAO.updateUser(userEntity);
+//        userDto.setUserName(username);
+//        userDto = userDAO.updateUser(userDto);
     }
 
     @Override
     public void setEmail(String email) {
-        userEntity.setEmail(email);
-        userEntity = userDAO.updateUser(userEntity);
+        userDto.setEmail(email);
+        userDto = userDAO.updateUser(userDto);
     }
 
     @Override
     public String getEmail() {
-        return userEntity.getEmail();
+        return userDto.getEmail();
     }
 
     @Override
     public void setSingleAttribute(String name, String value) {
         if (name.equals("phone")) {
-            userEntity.setPhone(value);
+            userDto.setPhone(value);
         } else {
             super.setSingleAttribute(name, value);
         }
@@ -61,27 +61,27 @@ public class UserRepresentation extends AbstractUserAdapterFederatedStorage {
     @Override
     public void removeAttribute(String name) {
         if (name.equals("phone")) {
-            userEntity.setPhone(null);
+            userDto.setPhone(null);
         } else {
             super.removeAttribute(name);
         }
-        userEntity = userDAO.updateUser(userEntity);
+        userDto = userDAO.updateUser(userDto);
     }
 
     @Override
     public void setAttribute(String name, List<String> values) {
         if (name.equals("phone")) {
-            userEntity.setPhone(values.get(0));
+            userDto.setPhone(values.get(0));
         } else {
             super.setAttribute(name, values);
         }
-        userEntity = userDAO.updateUser(userEntity);
+        userDto = userDAO.updateUser(userDto);
     }
 
     @Override
     public String getFirstAttribute(String name) {
         if (name.equals("phone")) {
-            return userEntity.getPhone();
+            return userDto.getPhone();
         } else {
             return super.getFirstAttribute(name);
         }
@@ -92,7 +92,7 @@ public class UserRepresentation extends AbstractUserAdapterFederatedStorage {
         Map<String, List<String>> attrs = super.getAttributes();
         MultivaluedHashMap<String, String> all = new MultivaluedHashMap<>();
         all.putAll(attrs);
-        all.add("phone", userEntity.getPhone());
+        all.add("phone", userDto.getPhone());
         return all;
     }
 
@@ -100,7 +100,7 @@ public class UserRepresentation extends AbstractUserAdapterFederatedStorage {
     public List<String> getAttribute(String name) {
         if (name.equals("phone")) {
             List<String> phone = new LinkedList<>();
-            phone.add(userEntity.getPhone());
+            phone.add(userDto.getPhone());
             return phone;
         } else {
             return super.getAttribute(name);
@@ -109,15 +109,11 @@ public class UserRepresentation extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public String getId() {
-        return StorageId.keycloakId(storageProviderModel, userEntity.getId().toString());
+        return StorageId.keycloakId(storageProviderModel, userDto.getId());
     }
 
     public String getPassword() {
-        return userEntity.getPassword();
+        return userDto.getPassword();
     }
 
-    public void setPassword(String password) {
-        userEntity.setPassword(password);
-        userEntity = userDAO.updateUser(userEntity);
-    }
 }

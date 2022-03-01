@@ -1,16 +1,16 @@
 package com.example.keycloakuserstore;
 
 import com.example.keycloakuserstore.dao.UserDAO;
-import com.example.keycloakuserstore.models.User;
+import com.example.keycloakuserstore.entity.CfmastEntity;
+import com.example.keycloakuserstore.entity.UserLoginEntity;
+import com.example.keycloakuserstore.model.UserDto;
 import lombok.extern.jbosslog.JBossLog;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.keycloak.Config;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.component.ComponentValidationException;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.RealmModel;
 import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.provider.ProviderConfigurationBuilder;
@@ -104,20 +104,22 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
         properties = new HashMap();
         String dbConnectionName = model.getConfig().getFirst("db:connectionName");
         EntityManagerFactory entityManagerFactory = entityManagerFactories.get(dbConnectionName);
-        if(entityManagerFactory == null) {
+        if (entityManagerFactory == null) {
             MultivaluedHashMap<String, String> config = model.getConfig();
-            properties.put("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver");
+            properties.put("hibernate.connection.driver_class", "oracle.jdbc.OracleDriver");
             properties.put("hibernate.connection.url",
-                    String.format("jdbc:mysql://%s:%s/%s",
+                    String.format("jdbc:oracle:thin:@//%s:%s/%s",
                             config.getFirst(DB_HOST_KEY),
                             config.getFirst(DB_PORT_KEY),
                             config.getFirst(DB_DATABASE_KEY)));
             properties.put("hibernate.connection.username", config.getFirst(DB_USERNAME_KEY));
             properties.put("hibernate.connection.password", config.getFirst(DB_PASSWORD_KEY));
             properties.put("hibernate.show-sql", "true");
-            properties.put("hibernate.archive.autodetection", "class, hbm");
-            properties.put("hibernate.hbm2ddl.auto", "update");
+//            properties.put("hibernate.archive.autodetection", "class, hbm");
+//            properties.put("hibernate.hbm2ddl.auto", "update");
             properties.put("hibernate.connection.autocommit", "true");
+            properties.put("hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
+
 
             entityManagerFactory = new HibernatePersistenceProvider().createContainerEntityManagerFactory(getPersistenceUnitInfo("h2userstorage"), properties);
             entityManagerFactories.put(dbConnectionName, entityManagerFactory);
@@ -136,27 +138,27 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
     @Override
     public void validateConfiguration(KeycloakSession session, RealmModel realm, ComponentModel config) throws ComponentValidationException {
         MultivaluedHashMap<String, String> configMap = config.getConfig();
-        if(StringUtils.isBlank(configMap.getFirst(DB_CONNECTION_NAME_KEY))) {
+        if (StringUtils.isBlank(configMap.getFirst(DB_CONNECTION_NAME_KEY))) {
             throw new ComponentValidationException("Connection name empty.");
         }
-        if(StringUtils.isBlank(configMap.getFirst(DB_HOST_KEY))) {
+        if (StringUtils.isBlank(configMap.getFirst(DB_HOST_KEY))) {
             throw new ComponentValidationException("Database host empty.");
         }
-        if(!StringUtils.isNumeric(configMap.getFirst(DB_PORT_KEY)) || Long.parseLong(configMap.getFirst(DB_PORT_KEY)) > PORT_LIMIT) {
+        if (!StringUtils.isNumeric(configMap.getFirst(DB_PORT_KEY)) || Long.parseLong(configMap.getFirst(DB_PORT_KEY)) > PORT_LIMIT) {
             throw new ComponentValidationException("Invalid port. (Empty or NaN)");
         }
-        if(StringUtils.isBlank(configMap.getFirst(DB_DATABASE_KEY))) {
+        if (StringUtils.isBlank(configMap.getFirst(DB_DATABASE_KEY))) {
             throw new ComponentValidationException("Database name empty.");
         }
-        if(StringUtils.isBlank(configMap.getFirst(DB_USERNAME_KEY))) {
+        if (StringUtils.isBlank(configMap.getFirst(DB_USERNAME_KEY))) {
             throw new ComponentValidationException("Database username empty.");
         }
-        if(StringUtils.isBlank(configMap.getFirst(DB_PASSWORD_KEY))) {
+        if (StringUtils.isBlank(configMap.getFirst(DB_PASSWORD_KEY))) {
             throw new ComponentValidationException("Database password empty.");
         }
     }
 
-    private PersistenceUnitInfo getPersistenceUnitInfo(String name) {
+    private static PersistenceUnitInfo getPersistenceUnitInfo(String name) {
         return new PersistenceUnitInfo() {
             @Override
             public String getPersistenceUnitName() {
@@ -207,7 +209,8 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
             @Override
             public List<String> getManagedClassNames() {
                 List<String> managedClasses = new LinkedList<>();
-                managedClasses.add(User.class.getName());
+                managedClasses.add(CfmastEntity.class.getName());
+                managedClasses.add(UserLoginEntity.class.getName());
                 return managedClasses;
             }
 
@@ -255,6 +258,31 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
 
     @Override
     public String getId() {
-        return "demo-mysql-user-provider";
+        return "flex-user-provider";
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("hibernate.connection.driver_class", "oracle.jdbc.OracleDriver");
+        properties.put("hibernate.connection.url",
+                "jdbc:oracle:thin:@//10.47.9.222:1521/KSSUAT19C");
+        properties.put("hibernate.connection.username", "HOST");
+        properties.put("hibernate.connection.password", "host");
+        properties.put("hibernate.show-sql", "true");
+        properties.put("hibernate.format_sql", "true");
+        properties.put("hibernate.archive.autodetection", "class, hbm");
+//            properties.put("hibernate.hbm2ddl.auto", "update");
+        properties.put("hibernate.connection.autocommit", "true");
+        properties.put("hibernate.connection.initial_pool_size", "1");
+        properties.put("hibernate.connection.min_pool_size", "1");
+        properties.put("hibernate.connection.pool_size", "5");
+        properties.put("hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
+
+
+        EntityManagerFactory h2userstorage = new HibernatePersistenceProvider().createContainerEntityManagerFactory(getPersistenceUnitInfo("h2userstorage"), properties);
+        UserDAO userDAO = new UserDAO(h2userstorage.createEntityManager());
+        List<UserDto> all = userDAO.findAll();
+        all.forEach(userDto -> System.out.println(userDto.getId()));
+
     }
 }
