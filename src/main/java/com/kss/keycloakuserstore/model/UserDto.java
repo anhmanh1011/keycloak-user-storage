@@ -1,4 +1,4 @@
-package com.example.keycloakuserstore.model;
+package com.kss.keycloakuserstore.model;
 
 import lombok.Data;
 

@@ -1,9 +1,8 @@
-package com.example.keycloakuserstore;
+package com.kss.keycloakuserstore;
 
-import com.example.keycloakuserstore.dao.UserDAO;
-import com.example.keycloakuserstore.entity.CfmastEntity;
-import com.example.keycloakuserstore.entity.UserLoginEntity;
-import com.example.keycloakuserstore.model.UserDto;
+import com.kss.keycloakuserstore.dao.UserDAO;
+import com.kss.keycloakuserstore.entity.CfmastEntity;
+import com.kss.keycloakuserstore.entity.UserLoginEntity;
 import lombok.extern.jbosslog.JBossLog;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -115,8 +114,12 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
             properties.put("hibernate.connection.username", config.getFirst(DB_USERNAME_KEY));
             properties.put("hibernate.connection.password", config.getFirst(DB_PASSWORD_KEY));
             properties.put("hibernate.show-sql", "true");
-//            properties.put("hibernate.archive.autodetection", "class, hbm");
-//            properties.put("hibernate.hbm2ddl.auto", "update");
+            properties.put("hibernate.archive.autodetection", "class, hbm");
+
+            properties.put("hibernate.connection.initial_pool_size", "4");
+            properties.put("hibernate.connection.min_pool_size", "4");
+            properties.put("hibernate.connection.pool_size", "15");
+
             properties.put("hibernate.connection.autocommit", "true");
             properties.put("hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
 
@@ -130,6 +133,7 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
 
     @Override
     public void onUpdate(KeycloakSession session, RealmModel realm, ComponentModel oldModel, ComponentModel newModel) {
+        log.info("========onUpdate=======" + DemoUserStorageProviderFactory.class.getName());
         String oldCnName = oldModel.getConfig().getFirst(DB_CONNECTION_NAME_KEY);
         entityManagerFactories.remove(oldCnName);
         onCreate(session, realm, newModel);
@@ -261,6 +265,14 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
         return "flex-user-provider";
     }
 
+    @Override
+    public void close() {
+        log.info("========close=======" + DemoUserStorageProviderFactory.class.getName());
+        EntityManagerFactory entityManagerFactory = entityManagerFactories.get(DB_CONNECTION_NAME_KEY);
+        entityManagerFactory.close();
+
+    }
+
     public static void main(String[] args) {
         Map<String, String> properties = new HashMap<>();
         properties.put("hibernate.connection.driver_class", "oracle.jdbc.OracleDriver");
@@ -272,17 +284,13 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
         properties.put("hibernate.format_sql", "true");
         properties.put("hibernate.archive.autodetection", "class, hbm");
 //            properties.put("hibernate.hbm2ddl.auto", "update");
-        properties.put("hibernate.connection.autocommit", "true");
-        properties.put("hibernate.connection.initial_pool_size", "1");
-        properties.put("hibernate.connection.min_pool_size", "1");
-        properties.put("hibernate.connection.pool_size", "5");
+
         properties.put("hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
 
 
         EntityManagerFactory h2userstorage = new HibernatePersistenceProvider().createContainerEntityManagerFactory(getPersistenceUnitInfo("h2userstorage"), properties);
         UserDAO userDAO = new UserDAO(h2userstorage.createEntityManager());
-        List<UserDto> all = userDAO.findAll();
-        all.forEach(userDto -> System.out.println(userDto.getId()));
+        System.out.println(userDAO.getUserByUsername("0333514807").get().getId());
 
     }
 }

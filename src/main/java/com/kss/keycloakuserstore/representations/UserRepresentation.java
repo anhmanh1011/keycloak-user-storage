@@ -1,7 +1,7 @@
-package com.example.keycloakuserstore.representations;
+package com.kss.keycloakuserstore.representations;
 
-import com.example.keycloakuserstore.dao.UserDAO;
-import com.example.keycloakuserstore.model.UserDto;
+import com.kss.keycloakuserstore.dao.UserDAO;
+import com.kss.keycloakuserstore.model.UserDto;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
@@ -106,6 +106,12 @@ public class UserRepresentation extends AbstractUserAdapterFederatedStorage {
             return super.getAttribute(name);
         }
     }
+
+    @Override
+    public String getFirstName() {
+        return  userDto.getFullName();
+    }
+
 
     @Override
     public String getId() {

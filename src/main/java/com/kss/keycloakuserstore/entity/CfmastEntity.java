@@ -1,4 +1,4 @@
-package com.example.keycloakuserstore.entity;
+package com.kss.keycloakuserstore.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,8 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @NamedQueries({
-        @NamedQuery(name="getUserByUsername", query="select u from CfmastEntity u where u.userName = :username and u.status = 'A' order by u.openTime desc "),
+        @NamedQuery(name="getUserByUsername", query="select u from CfmastEntity u where lower(u.userName) = lower(:username)  or u.email = :email or u.phone = :phone and u.status = 'A' order by u.openTime desc "),
+        @NamedQuery(name="getUserByUsernameOrEmail", query="select u from CfmastEntity u where lower(u.userName) like lower(:username)  or u.email like :email or u.phone like :phone and u.status = 'A' order by u.openTime desc "),
         @NamedQuery(name="getUserByEmail", query="select u from CfmastEntity u where u.email = :email and u.status = 'A' order by u.openTime desc "),
         @NamedQuery(name="getUserCount", query="select count(u) from CfmastEntity u  WHERE u.status = 'A' order by u.openTime desc "),
         @NamedQuery(name="searchForUser", query="select u from CfmastEntity u WHERE " +
@@ -37,7 +38,7 @@ public class CfmastEntity {
     @Column(name = "EMAIL")
     private String email;
 
-    @Column(name = "PHONE")
+    @Column(name = "MOBILE")
     private String phone;
 
     @Column(name = "FULLNAME")

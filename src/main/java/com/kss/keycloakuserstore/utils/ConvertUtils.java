@@ -1,7 +1,7 @@
-package com.example.keycloakuserstore.utils;
+package com.kss.keycloakuserstore.utils;
 
-import com.example.keycloakuserstore.entity.CfmastEntity;
-import com.example.keycloakuserstore.model.UserDto;
+import com.kss.keycloakuserstore.entity.CfmastEntity;
+import com.kss.keycloakuserstore.model.UserDto;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

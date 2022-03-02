@@ -1,4 +1,4 @@
-package com.example.keycloakuserstore.entity;
+package com.kss.keycloakuserstore.entity;
 
 import lombok.*;
 import lombok.experimental.Accessors;

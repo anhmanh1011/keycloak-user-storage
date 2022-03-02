@@ -1,8 +1,8 @@
-package com.example.keycloakuserstore;
+package com.kss.keycloakuserstore;
 
-import com.example.keycloakuserstore.dao.UserDAO;
-import com.example.keycloakuserstore.model.UserDto;
-import com.example.keycloakuserstore.representations.UserRepresentation;
+import com.kss.keycloakuserstore.dao.UserDAO;
+import com.kss.keycloakuserstore.model.UserDto;
+import com.kss.keycloakuserstore.representations.UserRepresentation;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.CredentialInput;
 import org.keycloak.credential.CredentialInputUpdater;
@@ -83,13 +83,7 @@ public class DemoUserStorageProvider implements UserStorageProvider,
 
     @Override
     public Set<String> getDisableableCredentialTypes(RealmModel realm, UserModel user) {
-        if (getUserRepresentation(user).getPassword() != null) {
-            Set<String> set = new HashSet<>();
-            set.add(PasswordCredentialModel.TYPE);
-            return set;
-        } else {
-            return Collections.emptySet();
-        }
+        return Collections.emptySet();
     }
 
     public UserRepresentation getUserRepresentation(UserModel user) {
@@ -152,13 +146,17 @@ public class DemoUserStorageProvider implements UserStorageProvider,
     public List<UserModel> searchForUser(Map<String, String> params, RealmModel realm) {
         logger.info("searchForUser(params: " + params + ", realm: " + realm + ")");
         // TODO Will probably never implement; Only used by REST API
-        return new ArrayList<>();
+
+        return userDAO.searchForUserByParam(params, null, null)
+                .stream()
+                .map(user -> new UserRepresentation(session, realm, model, user, userDAO))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<UserModel> searchForUser(Map<String, String> params, RealmModel realm, int firstResult,
                                          int maxResults) {
-        return userDAO.findAll(firstResult, maxResults)
+        return userDAO.searchForUserByParam(params, firstResult, maxResults)
                 .stream()
                 .map(user -> new UserRepresentation(session, realm, model, user, userDAO))
                 .collect(Collectors.toList());
@@ -179,6 +177,14 @@ public class DemoUserStorageProvider implements UserStorageProvider,
     @Override
     public List<UserModel> searchForUserByUserAttribute(String attrName, String attrValue, RealmModel realm) {
         // TODO Will probably never implement
+        if (attrName.equals("phone")) {
+            Map<String, String> map = new HashMap<>();
+            map.put("phone", attrValue);
+            return userDAO.searchForUserByParam(map, null, null)
+                    .stream()
+                    .map(user -> new UserRepresentation(session, realm, model, user, userDAO))
+                    .collect(Collectors.toList());
+        }
         return new ArrayList<>();
     }
 
