@@ -4,7 +4,7 @@ package com.kss.keycloakuserstore.dao;
 import com.kss.keycloakuserstore.entity.CfmastEntity;
 import com.kss.keycloakuserstore.model.UserDto;
 import com.kss.keycloakuserstore.utils.ConvertUtils;
-import org.keycloak.utils.StringUtil;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -56,9 +56,9 @@ public class UserDAO {
 
         TypedQuery<CfmastEntity> query = entityManager.createQuery("SELECT u FROM CfmastEntity  u where (lower(u.userName) = lower(:username)  or u.email = :email or u.phone = :phone) and u.status = 'A' order by u.openTime desc ", CfmastEntity.class)
 
-        .setParameter("username", username)
-        .setParameter("email", username)
-        .setParameter("phone", username);
+                .setParameter("username", username)
+                .setParameter("email", username)
+                .setParameter("phone", username);
         return query.getResultList().stream().map(ConvertUtils::convertCfmastToUserDto).findFirst();
     }
 
@@ -101,17 +101,17 @@ public class UserDAO {
         logger.info("searchForUserByParam(param: " + param + ", start: " + start + ", max: " + max + ")");
         String queryDB = "SELECT c FROM CfmastEntity  c where lower(c.userName) like lower(:username) or c.email like :email or c.phone like :phone and c.status = 'A' ";
         TypedQuery<CfmastEntity> query = entityManager.createQuery(queryDB, CfmastEntity.class);
-        if (StringUtil.isNotBlank(param.get("username")))
+        if (StringUtils.isNotBlank(param.get("username")))
             query.setParameter("username", "%" + param.get("username") + "%");
         else
             query.setParameter("username", "%");
 
-        if (StringUtil.isNotBlank(param.get("email")))
+        if (StringUtils.isNotBlank(param.get("email")))
             query.setParameter("email", "%" + param.get("email"));
         else
             query.setParameter("email", "%");
 
-        if (StringUtil.isNotBlank(param.get("phone")))
+        if (StringUtils.isNotBlank(param.get("phone")))
             query.setParameter("phone", "%" + param.get("phone") + "%");
         else
             query.setParameter("phone", "%");
