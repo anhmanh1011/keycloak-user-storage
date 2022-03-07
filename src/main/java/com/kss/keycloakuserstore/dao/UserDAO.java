@@ -6,10 +6,7 @@ import com.kss.keycloakuserstore.model.UserDto;
 import com.kss.keycloakuserstore.utils.ConvertUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -181,13 +178,19 @@ public class UserDAO {
     }
 
     public boolean validateCredentials(String username, String challengeResponse) {
-        logger.info("validateCredentials(String username, String challengeResponse) ");
+        logger.info("validateCredentials( " + username );
+//        logger.info("validateCredentials( " + username + " pass: " + challengeResponse);
         String queryDB = "SELECT 1 from UserLoginEntity u where u.username = (SELECT c.userName FROM CfmastEntity  c where lower(c.userName) = lower(:username) or c.email = :email or c.phone = :phone and c.status = 'A' ) and u.password = :password";
         TypedQuery<Integer> query = entityManager.createQuery(queryDB, Integer.class);
         query.setParameter("username", username);
         query.setParameter("email", username);
         query.setParameter("phone", username);
         query.setParameter("password", challengeResponse);
-        return query.getFirstResult() == 1;
+        try {
+            logger.info("validateCredential" + query.getSingleResult());
+            return query.getSingleResult() == 1;
+        } catch (NoResultException ex) {
+            return false;
+        }
     }
 }

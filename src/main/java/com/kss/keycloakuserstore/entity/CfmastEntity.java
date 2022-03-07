@@ -34,7 +34,6 @@ public class CfmastEntity {
     @Column(name = "CUSTODYCD")
     private String userName;
 
-
     @Column(name = "EMAIL")
     private String email;
 
