@@ -178,7 +178,7 @@ public class UserDAO {
     }
 
     public boolean validateCredentials(String username, String challengeResponse) {
-        logger.info("validateCredentials( " + username );
+        logger.info("validateCredentials( " + username);
 //        logger.info("validateCredentials( " + username + " pass: " + challengeResponse);
         String queryDB = "SELECT 1 from UserLoginEntity u where u.username = (SELECT c.userName FROM CfmastEntity  c where lower(c.userName) = lower(:username) or c.email = :email or c.phone = :phone and c.status = 'A' ) and u.password = :password";
         TypedQuery<Integer> query = entityManager.createQuery(queryDB, Integer.class);
@@ -187,9 +187,10 @@ public class UserDAO {
         query.setParameter("phone", username);
         query.setParameter("password", challengeResponse);
         try {
-            logger.info("validateCredential" + query.getSingleResult());
             return query.getSingleResult() == 1;
         } catch (NoResultException ex) {
+            ex.printStackTrace();
+            logger.info("login faild  :  " + username);
             return false;
         }
     }

@@ -290,7 +290,7 @@ public class DemoUserStorageProviderFactory implements UserStorageProviderFactor
 
         EntityManagerFactory h2userstorage = new HibernatePersistenceProvider().createContainerEntityManagerFactory(getPersistenceUnitInfo("h2userstorage"), properties);
         UserDAO userDAO = new UserDAO(h2userstorage.createEntityManager());
-        System.out.println(userDAO.validateCredentials("047C002975","62888b535facf3dd559803e921693edd"));
+        System.out.println(userDAO.validateCredentials("047C02975","62888b535facf3dd559803e921693edd"));
 
     }
 }
