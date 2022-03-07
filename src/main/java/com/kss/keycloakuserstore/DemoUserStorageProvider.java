@@ -66,13 +66,17 @@ public class DemoUserStorageProvider implements UserStorageProvider,
 
     @Override
     public boolean updateCredential(RealmModel realm, UserModel userModel, CredentialInput input) {
-
+        logger.info("updateCredential: " + userModel.getUsername());
         if (!supportsCredentialType(input.getType()) || !(input instanceof UserCredentialModel)) {
             return false;
         }
         UserCredentialModel cred = (UserCredentialModel) input;
-        return userDAO.updatePassword(userModel.getUsername(), cred.getChallengeResponse());
-
+        try {
+            return userDAO.updatePassword(userModel.getUsername(), cred.getChallengeResponse());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override

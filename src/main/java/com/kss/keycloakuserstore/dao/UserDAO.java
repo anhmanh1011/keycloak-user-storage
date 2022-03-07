@@ -56,9 +56,9 @@ public class UserDAO {
 
         TypedQuery<CfmastEntity> query = entityManager.createQuery("SELECT u FROM CfmastEntity  u where (lower(u.userName) = lower(:username)  or u.email = :email or u.phone = :phone) and u.status = 'A' order by u.openTime desc ", CfmastEntity.class)
 
-        .setParameter("username", username)
-        .setParameter("email", username)
-        .setParameter("phone", username);
+                .setParameter("username", username)
+                .setParameter("email", username)
+                .setParameter("phone", username);
         return query.getResultList().stream().map(ConvertUtils::convertCfmastToUserDto).findFirst();
     }
 
@@ -149,17 +149,31 @@ public class UserDAO {
         return userDto;
     }
 
-    public boolean updatePassword(String userName, String password) {
+    public boolean updatePassword(String userName, String password) throws Exception {
+        logger.info("updatePassword(id: " + userName + ")");
+
         EntityTransaction transaction = entityManager.getTransaction();
-        transaction.begin();
-        String qryString = "update UserLoginEntity s set s.password=:password where lower(s.username) =:username  ";
-        Query query = entityManager.createQuery(qryString)
-                .setParameter("username", userName)
-                .setParameter("password", password);
-        int i = query.executeUpdate();
-        transaction.commit();
-        logger.info("update " + i + " record to DB , username: " + userName);
-        return i > 0;
+        try {
+            transaction.begin();
+            String qryString = "update UserLoginEntity s set s.password=:password where lower(s.username) =lower(:username)  ";
+            Query query = entityManager.createQuery(qryString)
+                    .setParameter("username", userName)
+                    .setParameter("password", password);
+            int i = query.executeUpdate();
+            logger.info("update " + i + " record to DB , username: " + userName);
+            if (i == 1) {
+                transaction.commit();
+                return true;
+            } else {
+                logger.info("update password false , record: " + i);
+                transaction.rollback();
+                return false;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            transaction.rollback();
+            throw new Exception("update password failed");
+        }
     }
 
     public int size() {
@@ -174,6 +188,6 @@ public class UserDAO {
         query.setParameter("email", username);
         query.setParameter("phone", username);
         query.setParameter("password", challengeResponse);
-        return query.getSingleResult() == 1;
+        return query.getFirstResult() == 1;
     }
 }
