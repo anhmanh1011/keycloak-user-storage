@@ -152,7 +152,7 @@ public class UserDAO {
         EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            String qryString = "update UserLoginEntity s set s.password=:password where lower(s.username) =lower(:username)  ";
+            String qryString = "update UserLoginEntity s set s.password=:password where lower(s.username) =lower(:username) and s.status='A' ";
             Query query = entityManager.createQuery(qryString)
                     .setParameter("username", userName)
                     .setParameter("password", password);
@@ -180,7 +180,7 @@ public class UserDAO {
     public boolean validateCredentials(String username, String challengeResponse) {
         logger.info("validateCredentials( " + username);
 //        logger.info("validateCredentials( " + username + " pass: " + challengeResponse);
-        String queryDB = "SELECT 1 from UserLoginEntity u where u.username = (SELECT c.userName FROM CfmastEntity  c where lower(c.userName) = lower(:username) or c.email = :email or c.phone = :phone and c.status = 'A' ) and u.password = :password";
+        String queryDB = "SELECT 1 from UserLoginEntity u where u.username = (SELECT c.userName FROM CfmastEntity  c where lower(c.userName) = lower(:username) or c.email = :email or c.phone = :phone and c.status = 'A' ) and u.password = :password and u.status='A'";
         TypedQuery<Integer> query = entityManager.createQuery(queryDB, Integer.class);
         query.setParameter("username", username);
         query.setParameter("email", username);

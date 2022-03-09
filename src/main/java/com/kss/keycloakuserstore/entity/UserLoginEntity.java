@@ -21,4 +21,6 @@ public class UserLoginEntity {
 
     @Column(name = "LOGINPWD")
     private String password;
+    @Column(name = "STATUS")
+    private String status;
 }
